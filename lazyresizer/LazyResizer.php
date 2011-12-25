@@ -8,56 +8,42 @@
  */
 abstract class LazyResizer
 {
-    
-    /**
-     * If it's an empty array, there is no limits for sizes
-     *
-     * @var array
-     */
-    protected $_allowedSizes = array();
-
     /**
      * Path to original image
      *
      * @var string
      */
     protected $_path;
-    
-    /**
-     * Cache path
-     * 
-     * @var string
-     */
-    protected static $_cachePath = 'imgcache';
-
-    /**
-     * 
-     * 
-     * @var string
-     */
-    protected static $_documentRoot;
-
-    
+        
     /**
      *
      * @param string $path Path to the original file relative to $_documentRoot
-     * @param array $options 
      * @throws InvalidArgumentException
      */
-    public function __construct($path, array $options = array())
+    public function __construct($path)
     {
         $this->_path = preg_replace('/^\/+/', '', $path);
         if (!$this->_path) {
             throw new InvalidArgumentException('You did not specify either width or height');
         }
+    }
+    
+    public static function getConfig($name)
+    {
+        static $config;
         
-        if ($options['cachePath']) {
-            self::setCachePath($options['cachePath']);
+        if (!$config) {
+            $config = include __DIR__ .'/config.php';
+            if (!is_array($config)) {
+                throw new Exception('config.php must return an array');
+            }
         }
         
-        if ($options['documentRoot']) {
-            self::setDocumentRoot($options['documentRoot']);
+        if (!isset($config[$name])) {
+            throw new Exception("Parameter '$name' is not defined in config");
         }
+        
+        return $config[$name];
     }
     
     /**
@@ -67,50 +53,7 @@ abstract class LazyResizer
      */
     public function getServerPath()
     {
-        return self::getDocumentRoot() . DIRECTORY_SEPARATOR . $this->_path;
-    }
-    
-    /**
-     * Set document root
-     *
-     * @param string $path 
-     */
-    public static function setDocumentRoot($path)
-    {
-        self::$_documentRoot = preg_replace('/(\\|\/)$/', '', $path);
-    }
-    
-    /**
-     * Get document root
-     *
-     * @return string
-     */
-    public static function getDocumentRoot()
-    {
-        if (!self::$_documentRoot) {
-            self::setDocumentRoot($_SERVER['DOCUMENT_ROOT']);
-        }
-        return self::$_documentRoot;
-    }
-
-    /**
-     * Set cache path
-     *
-     * @param string $path 
-     */
-    public static function setCachePath($path)
-    {
-        self::$_cachePath = preg_replace('/(^\/+|\/+$)/', '', $path);
-    }
-
-    /**
-     * Get cache path
-     *
-     * @return string
-     */
-    public static function getCachePath()
-    {
-        return self::$_cachePath;
+        return self::getConfig('documentRoot') . DIRECTORY_SEPARATOR . $this->_path;
     }
 
     /**
@@ -158,7 +101,7 @@ abstract class LazyResizer
             $query = '?' . implode('&', $parts);
         }
         
-        return self::getCachePath() . '/' . $newPath . $query;
+        return self::getConfig('cacheUrl') . '/' . $newPath . $query;
     }
 
     /**
@@ -196,18 +139,18 @@ abstract class LazyResizer
             }
 
             $path = $image . $ext;
-            $original = self::getDocumentRoot() . DIRECTORY_SEPARATOR . $path;
+            $original = self::getConfig('documentRoot') . DIRECTORY_SEPARATOR . $path;
 
             if (file_exists($original)) {
                 
-                // check checksum
+                // check the checksum
                 if ($checksum != substr(md5(md5_file($original) . $width . $height), 0, 6)) {
                     throw new Exception('The file checksum does not match the coumputed checksum');
                 }
                 
                 $resizer = new static($path);
-                $saveTo = self::getDocumentRoot() . DIRECTORY_SEPARATOR . 
-                        self::getCachePath() . DIRECTORY_SEPARATOR . $request;
+                $saveTo = self::getConfig('documentRoot'). DIRECTORY_SEPARATOR . 
+                        self::getConfig('cacheUrl') . DIRECTORY_SEPARATOR . $request;
                 
                 $saveToDir = dirname($saveTo);
                 if (!file_exists($saveToDir)) {
@@ -215,8 +158,15 @@ abstract class LazyResizer
                 }
                 
                 if ($resizer->resizeAndSave($saveTo, $width, $height)) {
-                    header('Location: /' . self::getCachePath() . '/' . $request);
-                    exit;
+                    $info = getimagesize($saveTo);
+                    $fp = fopen($saveTo, "rb");
+                    if ($info && $fp) {
+                        header("Content-type: {$info['mime']}");
+                        fpassthru($fp);
+                        exit;
+                    } else {
+                        throw new Exception("Cannot read from file '$path'");
+                    }
                 } else {
                     throw new Exception("File '$request' was not saved");
                 }

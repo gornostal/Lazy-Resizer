@@ -20,7 +20,7 @@ class PHPThumbResizer extends LazyResizer
         } else {
             $thumb->resize($width, $height);
         }
-	
-	return $thumb->save($saveTo);
+
+        return $thumb->save($saveTo);
     }
 }
