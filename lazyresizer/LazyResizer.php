@@ -87,11 +87,6 @@ abstract class LazyResizer
             throw new Exception("File '{$this->getServerPath()}' not found on the server");
         }
         
-        $checksum = substr(md5(md5_file($this->getServerPath()) . $width . $height), 0, 6);
-        
-        $newPath = preg_replace('|^(.*)([^/]*)(\.?[^/.]*)$|U', 
-                sprintf('$1$2(%s-%sx%s)$3', $checksum, $width, $height), $this->_path);
-        
         $query = '';
         if (is_array($params) && count($params)) {
             $parts = array();
@@ -100,6 +95,12 @@ abstract class LazyResizer
             }
             $query = '?' . implode('&', $parts);
         }
+        
+        $checksum = substr(md5(md5_file($this->getServerPath()) . 
+                $width . $height . $query), 0, 6);
+        
+        $newPath = preg_replace('|^(.*)([^/]*)(\.?[^/.]*)$|U', 
+                sprintf('$1$2(%s-%sx%s)$3', $checksum, $width, $height), $this->_path);
         
         return self::getConfig('cacheUrl') . '/' . $newPath . $query;
     }
@@ -144,7 +145,19 @@ abstract class LazyResizer
             if (file_exists($original)) {
                 
                 // check the checksum
-                if ($checksum != substr(md5(md5_file($original) . $width . $height), 0, 6)) {
+                $query = '';
+                if (count($_GET)) {
+                    $parts = array();
+                    foreach ($_GET as $k => $v) {
+                        if ($v == $request) {
+                            continue;
+                        }
+                        $parts[] = $k . '=' . $v;
+                    }
+                    $query = count($parts) ? '?' . implode('&', $parts) : '';
+                }
+                if ($checksum != substr(md5(md5_file($original) . 
+                        $width . $height . $query), 0, 6)) {
                     throw new Exception('The file checksum does not match the coumputed checksum');
                 }
                 
