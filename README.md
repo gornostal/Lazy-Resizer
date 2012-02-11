@@ -11,7 +11,7 @@ How it works
 ------------
 
 Script creates a URL of a resized image. But for that moment it does not know
-whether resized image exists or not.
+whether a resized image exists or not.
 
 When a resized image would be requested and if it exists, image returns to a browser,
 otherwise image path rewrites to a php script and resized image will be created.
@@ -45,11 +45,11 @@ Example
 * `$width` and `$height` is an integer. If you specify one of them it will be fine.
 * A third optional parameter is an array of parameters that will be added to a returned URL
 
-In this case returns URL like
+In this case it returns URL like
     
     imgcache/images/abstract-images/01(81fad6-50x100).jpg?mode=adaptive
 
 P.S.
 ----
 
-Will be glad to get any advice on how to improve the project. 
+Will be glad to get any advice on how to improve the project.
