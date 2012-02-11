@@ -4,6 +4,7 @@
  * Lazy Resizer
  * 
  * @author Aleksandr Gornostal <info@sanya.pp.ua>
+ * @link https://github.com/sanya-gornostal/Lazy-Resizer
  * @license WTFPL v2
  */
 abstract class LazyResizer
@@ -14,6 +15,12 @@ abstract class LazyResizer
      * @var string
      */
     protected $_path;
+    
+    /**
+     *
+     * @var array
+     */
+    protected $_config;
         
     /**
      *
@@ -28,33 +35,23 @@ abstract class LazyResizer
         }
     }
     
-    public static function getConfig($name)
+    public function getConfig($name)
     {
-        static $config;
-        
-        if (!$config) {
-            $config = include __DIR__ .'/config.php';
-            if (!is_array($config)) {
-                throw new Exception('config.php must return an array');
+        if (!$this->_config) {
+            $this->_config = $this->loadConfig();
+            if (!is_array($this->_config)) {
+                throw new Exception('Config must be an array');
             }
         }
         
-        if (!isset($config[$name])) {
+        if (!isset($this->_config[$name])) {
             throw new Exception("Parameter '$name' is not defined in config");
         }
         
-        return $config[$name];
+        return $this->_config[$name];
     }
     
-    /**
-     * Full path to original file
-     *
-     * @return string
-     */
-    public function getServerPath()
-    {
-        return self::getConfig('documentRoot') . DIRECTORY_SEPARATOR . $this->_path;
-    }
+    abstract public function loadConfig();
 
     /**
      * Returns true in case resized file was successfully created
@@ -65,6 +62,16 @@ abstract class LazyResizer
      * @return boolean
      */
     abstract public function resizeAndSave($saveTo, $width, $height);
+    
+    /**
+     * Full path to original file
+     *
+     * @return string
+     */
+    public function getServerPath()
+    {
+        return $this->getConfig('documentRoot') . DIRECTORY_SEPARATOR . $this->_path;
+    }
     
     /**
      * Returns path to resized image
@@ -102,7 +109,7 @@ abstract class LazyResizer
         $newPath = preg_replace('|^(.*)([^/]*)(\.?[^/.]*)$|U', 
                 sprintf('$1$2(%s-%sx%s)$3', $checksum, $width, $height), $this->_path);
         
-        return self::getConfig('cacheUrl') . '/' . $newPath . $query;
+        return $this->getConfig('cacheUrl') . '/' . $newPath . $query;
     }
 
     /**
@@ -140,7 +147,8 @@ abstract class LazyResizer
             }
 
             $path = $image . $ext;
-            $original = self::getConfig('documentRoot') . DIRECTORY_SEPARATOR . $path;
+            $resizer = new static($path);
+            $original = $resizer->getConfig('documentRoot') . DIRECTORY_SEPARATOR . $path;
 
             if (file_exists($original)) {
                 
@@ -161,9 +169,8 @@ abstract class LazyResizer
                     throw new Exception('The file checksum does not match the coumputed checksum', 400);
                 }
                 
-                $resizer = new static($path);
-                $saveTo = self::getConfig('documentRoot'). DIRECTORY_SEPARATOR . 
-                        self::getConfig('cacheUrl') . DIRECTORY_SEPARATOR . $request;
+                $saveTo = $resizer->getConfig('documentRoot'). DIRECTORY_SEPARATOR . 
+                        $resizer->getConfig('cacheUrl') . DIRECTORY_SEPARATOR . $request;
                 
                 $saveToDir = dirname($saveTo);
                 if (!file_exists($saveToDir)) {

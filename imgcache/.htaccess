@@ -3,4 +3,4 @@ RewriteEngine On
 RewriteBase /imgcache
 
 RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^(.*)$ /lazyresizer/resize_handler.php?path=$1 [L,QSA]
+RewriteRule ^(.*)$ /demo_resize_handler/resize_handler.php?path=$1 [L,QSA]
