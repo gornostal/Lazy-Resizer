@@ -1,6 +1,6 @@
 RewriteEngine On
 
-RewriteBase /lazyresizer/imgcache
+RewriteBase /imgcache
 
 RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^(.*)$ /lazyresizer/lazyresizer/resize_handler.php?path=$1 [L,QSA]
+RewriteRule ^(.*)$ /lazyresizer/resize_handler.php?path=$1 [L,QSA]

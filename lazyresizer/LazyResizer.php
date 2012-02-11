@@ -24,7 +24,7 @@ abstract class LazyResizer
     {
         $this->_path = preg_replace('/^\/+/', '', $path);
         if (!$this->_path) {
-            throw new InvalidArgumentException('You did not specify either width or height');
+            throw new InvalidArgumentException('You did not specify either width or height', 404);
         }
     }
     
@@ -136,7 +136,7 @@ abstract class LazyResizer
             $ext = $matches[5];
             
             if (!$width && !$height) {
-                throw new InvalidArgumentException('Neither width or height was specified');
+                throw new InvalidArgumentException('Neither width or height was specified', 400);
             }
 
             $path = $image . $ext;
@@ -158,7 +158,7 @@ abstract class LazyResizer
                 }
                 if ($checksum != substr(md5(md5_file($original) . 
                         $width . $height . $query), 0, 6)) {
-                    throw new Exception('The file checksum does not match the coumputed checksum');
+                    throw new Exception('The file checksum does not match the coumputed checksum', 400);
                 }
                 
                 $resizer = new static($path);
@@ -178,16 +178,16 @@ abstract class LazyResizer
                         fpassthru($fp);
                         exit;
                     } else {
-                        throw new Exception("Cannot read from file '$path'");
+                        throw new Exception("Cannot read from file '$path'", 500);
                     }
                 } else {
-                    throw new Exception("File '$request' was not saved");
+                    throw new Exception("File '$request' was not saved", 500);
                 }
             } else {
-                throw new Exception("File '$path' was not found on this server");
+                throw new Exception("File '$path' was not found on this server", 404);
             }
         } else {
-            throw new Exception('Invalid image URL');
+            throw new Exception('Invalid image URL', 400);
         }
     }
     
