@@ -11,7 +11,7 @@
 
 <?
 $original = 'images/abstract-images/01.jpg';
-include_once 'demo_resize_handler/PHPThumbResizer.php';
+include_once 'resize_handler/PHPThumbResizer.php';
 ?>
 
 <table>
