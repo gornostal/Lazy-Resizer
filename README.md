@@ -29,10 +29,10 @@ Installation
 
 * Download this project by issuing a git command `git clone --recursive git://github.com/sanya-gornostal/Lazy-Resizer.git`
 or visit a download page
-* Configure `imgcache/.htaccess` and `lazyresizer/config.php` for your project
-* Extend `LazyResizer` class and implement `resizeAndSave` method 
-(or just use `lazyresizer/PHPThumbResizer.php` along with PHPThumb library)
-* In `lazyresizer/resize_handler.php` include your class and call a static method `replaceResized`
+* Configure `imgcache/.htaccess` and `resize_handler/config.php` for your project
+* Extend `LazyResizer` class and implement methods `resizeAndSave` and `loadConfig`
+(or just use `resize_handler/PHPThumbResizer.php` along with PHPThumb library)
+* In `resize_handler/resize_handler.php` include your class and call a static method `replaceResized`
 
 Usage within a website
 ----------------------
