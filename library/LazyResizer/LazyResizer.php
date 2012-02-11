@@ -104,7 +104,7 @@ abstract class LazyResizer
         }
         
         $checksum = substr(md5(md5_file($this->getServerPath()) . 
-                $width . $height . $query), 0, 6);
+                $width . $height . $query . $this->getConfig('salt')), 0, 6);
         
         $newPath = preg_replace('|^(.*)([^/]*)(\.?[^/.]*)$|U', 
                 sprintf('$1$2(%s-%sx%s)$3', $checksum, $width, $height), $this->_path);
@@ -165,7 +165,7 @@ abstract class LazyResizer
                     $query = count($parts) ? '?' . implode('&', $parts) : '';
                 }
                 if ($checksum != substr(md5(md5_file($original) . 
-                        $width . $height . $query), 0, 6)) {
+                        $width . $height . $query . $resizer->getConfig('salt')), 0, 6)) {
                     throw new Exception('The file checksum does not match the coumputed checksum', 400);
                 }
                 
